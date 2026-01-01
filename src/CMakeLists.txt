@@ -110,7 +110,6 @@ target_include_directories(ntirpc PUBLIC
   "${PROJECT_BINARY_DIR}"
   "${NTIRPC_BASE_DIR}/ntirpc/"
   "${EXTRA_INCLUDE_DIR}"
-  ${LIBURCU_INC}
   $<$<BOOL:${USE_RPC_RDMA}>:${RDMA_INCLUDE_DIR}>
   $<$<BOOL:${USE_MONITORING}>:${CMAKE_CURRENT_SOURCE_DIR}/monitoring/include>
   $<$<BOOL:${USE_LTTNG}>:${LTTNG_INCLUDE_DIR}>
@@ -126,9 +125,29 @@ endif()
 
 # add required libraries--for Ganesha build
 target_link_libraries(ntirpc PUBLIC
-  ${SYSTEM_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
 )
+
+# Link system libraries conditionally, using library names for relocatability
+if(USE_GSS AND KRB5_FOUND)
+  target_link_libraries(ntirpc PUBLIC Krb5::krb5 Krb5::k5crypto Krb5::com_err Krb5::gssapi_krb5)
+endif()
+
+if(URCU_FOUND)
+  target_link_libraries(ntirpc PUBLIC URCU::urcu-bp)
+endif()
+
+if(_MSPAC_SUPPORT AND WBclient_FOUND)
+  target_link_libraries(ntirpc PUBLIC WBclient::WBclient)
+endif()
+
+if(USE_RPC_RDMA AND RDMA_FOUND)
+  target_link_libraries(ntirpc PUBLIC RDMA::rdmacm)
+endif()
+
+if(NOT BSDBASED AND NSL_FOUND)
+  target_link_libraries(ntirpc PUBLIC NSL::NSL)
+endif()
 
 if (USE_MONITORING)
 target_link_libraries(ntirpc PRIVATE ntirpcmonitoring)

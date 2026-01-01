@@ -150,3 +150,16 @@ ELSE(NOT KRB5_FOUND)
   MESSAGE(STATUS "Found kerberos 5 headers: ${KRB5_INCLUDE_DIRS}")
   MESSAGE(STATUS "Found kerberos 5 libs:    ${KRB5_LIBRARIES}")
 ENDIF(NOT KRB5_FOUND)
+
+# Create imported targets
+if(KRB5_FOUND)
+  foreach(lib_name IN LISTS KRB5_LIBRARY_NAMES)
+    if(KRB5_${lib_name}_LIBRARY)
+      add_library(Krb5::${lib_name} UNKNOWN IMPORTED)
+      set_target_properties(Krb5::${lib_name} PROPERTIES
+        IMPORTED_LOCATION "${KRB5_${lib_name}_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${KRB5_INCLUDE_DIRS}"
+      )
+    endif()
+  endforeach()
+endif()

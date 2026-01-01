@@ -63,3 +63,14 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS(RDMA
 #                                  VERSION_VAR)
 mark_as_advanced(RDMA_INCLUDE_DIR)
 mark_as_advanced(RDMA_LIBRARY)
+
+# Create imported targets
+if(RDMA_FOUND)
+  if(RDMACM_LIBRARY)
+    add_library(RDMA::rdmacm UNKNOWN IMPORTED)
+    set_target_properties(RDMA::rdmacm PROPERTIES
+      IMPORTED_LOCATION "${RDMACM_LIBRARY}"
+      INTERFACE_INCLUDE_DIRECTORIES "${RDMACM_INCLUDE_DIR}"
+    )
+  endif()
+endif()

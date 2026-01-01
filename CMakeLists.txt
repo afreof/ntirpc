@@ -10,6 +10,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
 include(${CMAKE_SOURCE_DIR}/cmake/maintainer_mode.cmake)
 
+include(CMakePackageConfigHelpers)
+
 project(NTIRPC C CXX)
 
 # version numbers
@@ -73,7 +75,6 @@ option(PROXY_PROTOCOL_PARSE_COMMON_NETWORK_ID "Enable parsing of common network 
 option(USE_RPC_RDMA "platform supports RDMA" OFF)
 if (USE_RPC_RDMA)
   find_package(RDMA REQUIRED)
-  set(SYSTEM_LIBRARIES ${SYSTEM_LIBRARIES} ${RDMA_LIBRARY})
 endif(USE_RPC_RDMA)
 
 # MSPAC support -lwbclient link flag
@@ -137,9 +138,7 @@ else(USE_LTTNG)
   set(USE_LTTNG_NTIRPC OFF)
 endif(USE_LTTNG)
 
-find_library(LIBURCU_LIB urcu-bp)
-find_path(LIBURCU_INC urcu-bp.h)
-set(SYSTEM_LIBRARIES ${SYSTEM_LIBRARIES} ${LIBURCU_LIB})
+find_package(URCU)
 
 # Choose a shortcut build config
 
@@ -190,7 +189,6 @@ find_package(Sanitizers)
 
 if(_MSPAC_SUPPORT)
   find_package(WBclient REQUIRED)
-  set(SYSTEM_LIBRARIES ${WBclient_LIBRARIES} ${SYSTEM_LIBRARIES})
 endif(_MSPAC_SUPPORT)
 
 if (BSDBASED)
@@ -200,17 +198,8 @@ else()
   set(EXTRA_INCLUDE_DIR "${NTIRPC_BASE_DIR}/ntirpc/")
 endif(BSDBASED)
 
-set(SYSTEM_LIBRARIES
-  ${KRB5_LIBRARIES}
-  ${SYSTEM_LIBRARIES}
-)
-
 if (NOT BSDBASED)
   find_package(NSL) # sockets
-  set(SYSTEM_LIBRARIES
-    ${SYSTEM_LIBRARIES}
-    ${NSL_LIBRARY}
-  )
 endif (NOT BSDBASED)
 
 set(LIBNTIRPC_MAP "${PROJECT_BINARY_DIR}/src/libntirpc.map")
@@ -308,3 +297,25 @@ endif (NOT TARGET rpm)
 install(FILES  ${PROJECT_BINARY_DIR}/libntirpc.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 install(DIRECTORY  ${NTIRPC_BASE_DIR}/ntirpc DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(FILES  ${PROJECT_BINARY_DIR}/ntirpc/version.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ntirpc)
+
+# Generate and install CMake package config files
+configure_package_config_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/NTIRPCConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/NTIRPCConfig.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/NTIRPC
+  PATH_VARS
+    CMAKE_INSTALL_INCLUDEDIR
+    CMAKE_INSTALL_LIBDIR
+)
+
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/NTIRPCConfigVersion.cmake
+  VERSION ${NTIRPC_VERSION}
+  COMPATIBILITY SameMajorVersion
+)
+
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/NTIRPCConfig.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/NTIRPCConfigVersion.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/NTIRPC
+)

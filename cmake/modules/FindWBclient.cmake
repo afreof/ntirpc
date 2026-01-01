@@ -59,3 +59,12 @@ if(WBCLIENT_LIB_OK AND WBCLIENT4_H)
 else(WBCLIENT_LIB_OK AND WBCLIENT4_H)
   message(STATUS "Winbind4 client not found ${SAMBA4_PREFIX}/lib")
 endif(WBCLIENT_LIB_OK AND WBCLIENT4_H)
+
+# Create imported target
+if(WBCLIENT_FOUND)
+  add_library(WBclient::WBclient UNKNOWN IMPORTED)
+  set_target_properties(WBclient::WBclient PROPERTIES
+    IMPORTED_LOCATION "${WBCLIENT_LIBRARIES}"
+    INTERFACE_INCLUDE_DIRECTORIES "${WBCLIENT_INCLUDE_DIR}"
+  )
+endif()

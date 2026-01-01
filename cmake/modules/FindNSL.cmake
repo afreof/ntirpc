@@ -25,3 +25,11 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS(NSL REQUIRED_VARS NSL_LIBRARY)
 
 mark_as_advanced(NSL_INCLUDE_DIR)
 mark_as_advanced(NSL_LIBRARY)
+
+# Create imported target
+if(NSL_FOUND)
+  add_library(NSL::NSL UNKNOWN IMPORTED)
+  set_target_properties(NSL::NSL PROPERTIES
+    IMPORTED_LOCATION "${NSL_LIBRARY}"
+  )
+endif()
