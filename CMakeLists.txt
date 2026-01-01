@@ -73,7 +73,6 @@ option(PROXY_PROTOCOL_PARSE_COMMON_NETWORK_ID "Enable parsing of common network 
 option(USE_RPC_RDMA "platform supports RDMA" OFF)
 if (USE_RPC_RDMA)
   find_package(RDMA REQUIRED)
-  include_directories(${RDMA_INCLUDE_DIR})
   set(SYSTEM_LIBRARIES ${SYSTEM_LIBRARIES} ${RDMA_LIBRARY})
 endif(USE_RPC_RDMA)
 
@@ -111,12 +110,6 @@ if(USE_LTTNG)
 	COMMAND_ERROR_IS_FATAL ANY
     )
 
-    include_directories(
-      ${LTTNG_INCLUDE_DIR}
-      "${CMAKE_CURRENT_SOURCE_DIR}/src/lttng/generator/include/"
-      "${CMAKE_CURRENT_BINARY_DIR}/ntirpc_generated_include/"
-    )
-
     set(USE_LTTNG_NTIRPC ON)
     set(BINARY_LIBRARIES ${BINARY_LIBRARIES} ntirpc_lttng)
 
@@ -146,7 +139,6 @@ endif(USE_LTTNG)
 
 find_library(LIBURCU_LIB urcu-bp)
 find_path(LIBURCU_INC urcu-bp.h)
-include_directories(${LIBURCU_INC})
 set(SYSTEM_LIBRARIES ${SYSTEM_LIBRARIES} ${LIBURCU_LIB})
 
 # Choose a shortcut build config
@@ -208,20 +200,7 @@ else()
   set(EXTRA_INCLUDE_DIR "${NTIRPC_BASE_DIR}/ntirpc/")
 endif(BSDBASED)
 
-add_definitions(-DHAVE_CONFIG_H)
-
-if (MSVC)
-   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-endif(MSVC)
-
-include_directories(BEFORE
-  "${PROJECT_BINARY_DIR}"
-  "${NTIRPC_BASE_DIR}/ntirpc/"
-  "${EXTRA_INCLUDE_DIR}"
-)
-
 set(SYSTEM_LIBRARIES
-  ${LIBTIRPC_LIBRARIES}
   ${KRB5_LIBRARIES}
   ${SYSTEM_LIBRARIES}
 )

@@ -1,14 +1,11 @@
 add_subdirectory(generator ${CMAKE_CURRENT_SOURCE_DIR}/generator/build)
 
-include_directories(
-  ${LTTNG_INCLUDE_DIR}
-)
-
 set(ntirpc_tracepoints_LIB_SRCS
   lttng_probes.c
 )
 
 add_library(ntirpc_tracepoints MODULE ${ntirpc_tracepoints_LIB_SRCS})
+target_include_directories(ntirpc_tracepoints PRIVATE ${LTTNG_INCLUDE_DIR})
 #add_sanitizers(ntirpc_tracepoints)
 
 target_link_libraries(ntirpc_tracepoints
@@ -25,6 +22,7 @@ set_target_properties(ntirpc_tracepoints PROPERTIES
 install(TARGETS ntirpc_tracepoints COMPONENT tracing DESTINATION ${CMAKE_INSTALL_LIBDIR} )
 
 add_library(ntirpc_lttng STATIC lttng_defines.c)
+target_include_directories(ntirpc_lttng PRIVATE ${LTTNG_INCLUDE_DIR})
 #add_sanitizers(ntirpc_lttng)
 
 target_link_libraries(ntirpc_lttng

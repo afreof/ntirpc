@@ -3,8 +3,6 @@ cmake_minimum_required(VERSION 3.18)
 project(generate_lttng LANGUAGES C CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_C_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES})
 
@@ -16,6 +14,7 @@ separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
 add_library(generate_lttng generate_lttng.cpp)
 target_include_directories(generate_lttng PRIVATE ${LLVM_INCLUDE_DIRS})
 target_compile_definitions(generate_lttng PRIVATE ${LLVM_DEFINITIONS_LIST})
+target_compile_features(generate_lttng PRIVATE cxx_std_17)
 target_link_libraries(generate_lttng
     LLVM
     clang-cpp
@@ -27,6 +26,7 @@ add_executable(generate_lttng_for_project generate_lttng_for_project.cpp)
 
 target_include_directories(generate_lttng_for_files PRIVATE ${LLVM_INCLUDE_DIRS})
 target_compile_definitions(generate_lttng_for_files PRIVATE ${LLVM_DEFINITIONS_LIST})
+target_compile_features(generate_lttng_for_files PRIVATE cxx_std_17)
 
 target_link_libraries(generate_lttng_for_files
     generate_lttng
@@ -37,6 +37,7 @@ target_link_libraries(generate_lttng_for_files
 
 target_include_directories(generate_lttng_for_project PRIVATE ${LLVM_INCLUDE_DIRS})
 target_compile_definitions(generate_lttng_for_project PRIVATE ${LLVM_DEFINITIONS_LIST})
+target_compile_features(generate_lttng_for_project PRIVATE cxx_std_17)
 
 target_link_libraries(generate_lttng_for_project
     generate_lttng

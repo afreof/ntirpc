@@ -1,9 +1,4 @@
 
-add_definitions(
-  -DPORTMAP
-  -DINET6
-  -D_GNU_SOURCE
-)
 
 ########### next target ###############
 
@@ -97,9 +92,6 @@ endif(USE_LTTNG_NTIRPC)
 
 if (USE_MONITORING)
   # Monitoring stack.
-  LIST(APPEND CMAKE_LIBRARY_PATH "${CMAKE_CURRENT_SOURCE_DIR}/monitoring/")
-  LINK_DIRECTORIES("${CMAKE_CURRENT_SOURCE_DIR}/monitoring/")
-  include_directories("${CMAKE_CURRENT_SOURCE_DIR}/monitoring/include")
   add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/monitoring/")
 endif (USE_MONITORING)
 
@@ -111,19 +103,39 @@ add_library(ntirpc SHARED
   ${ntirpc_monitoring_SRCS}
 )
 
-# add required libraries--for Ganesha build, it's ok for them to
-# propagate (i.e., omit PRIVATE)
-target_link_libraries(ntirpc
+target_include_directories(ntirpc PUBLIC
+  $<BUILD_INTERFACE:${NTIRPC_BASE_DIR}/ntirpc>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/ntirpc>
+  PRIVATE
+  "${PROJECT_BINARY_DIR}"
+  "${NTIRPC_BASE_DIR}/ntirpc/"
+  "${EXTRA_INCLUDE_DIR}"
+  ${LIBURCU_INC}
+  $<$<BOOL:${USE_RPC_RDMA}>:${RDMA_INCLUDE_DIR}>
+  $<$<BOOL:${USE_MONITORING}>:${CMAKE_CURRENT_SOURCE_DIR}/monitoring/include>
+  $<$<BOOL:${USE_LTTNG}>:${LTTNG_INCLUDE_DIR}>
+  $<$<BOOL:${USE_LTTNG}>:${CMAKE_CURRENT_SOURCE_DIR}/src/lttng/generator/include/>
+  $<$<BOOL:${USE_LTTNG}>:${CMAKE_CURRENT_BINARY_DIR}/ntirpc_generated_include/>
+)
+
+target_compile_definitions(ntirpc PRIVATE HAVE_CONFIG_H PORTMAP INET6 _GNU_SOURCE)
+
+if(MSVC)
+  target_compile_definitions(ntirpc PRIVATE _CRT_SECURE_NO_WARNINGS)
+endif()
+
+# add required libraries--for Ganesha build
+target_link_libraries(ntirpc PUBLIC
   ${SYSTEM_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT}
 )
 
 if (USE_MONITORING)
-target_link_libraries(ntirpc ntirpcmonitoring)
+target_link_libraries(ntirpc PRIVATE ntirpcmonitoring)
 endif (USE_MONITORING)
 
 if(USE_LTTNG)
-target_link_libraries(ntirpc ntirpc_lttng)
+target_link_libraries(ntirpc PRIVATE ntirpc_lttng)
 endif(USE_LTTNG)
 
 # set library version and symbol namespace(s) from gen'd map file
@@ -133,8 +145,14 @@ set_target_properties(ntirpc PROPERTIES LINK_FLAGS
   SOVERSION "${NTIRPC_MAJOR_VERSION}${NTIRPC_MINOR_VERSION}"
   )
 
-install(TARGETS ntirpc DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS ntirpc
+  EXPORT ntirpcTargets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
 
-########### install files ###############
-
-# We are still missing the install of docs and stuff
+install(EXPORT ntirpcTargets
+  FILE ntirpcTargets.cmake
+  NAMESPACE NTIRPC::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/NTIRPC
+)
